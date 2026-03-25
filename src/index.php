@@ -177,6 +177,7 @@ $plataformas = $pdo->query("SELECT * FROM plataformas")->fetchAll(PDO::FETCH_ASS
     <nav>
       <a href="#juegos">Juegos</a>
       <a href="#plataformas">Plataformas</a>
+      <a href="#dlcs">DLCs</a>
     </nav>
   </header>
 
@@ -256,6 +257,61 @@ $plataformas = $pdo->query("SELECT * FROM plataformas")->fetchAll(PDO::FETCH_ASS
 
 
     <!-- SECCIÓN: DLCs -->
+    <div class="section" id="dlcs">
+      <?php
+        $juegos_select = $pdo->query("SELECT id, titulo FROM juegos ORDER BY titulo")->fetchAll(PDO::FETCH_ASSOC);
+        $dlcs = $pdo->query("
+            SELECT d.*, j.titulo AS nombre_juego 
+            FROM dlcs d 
+            JOIN juegos j ON j.id = d.juego_id
+            ORDER BY d.id DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+      ?>
+
+      <h2>🕹️ Agregar DLC</h2>
+      <form action="agregar_dlc.php" method="POST">
+        <label>Juego</label>
+        <select name="juego_id" required>
+          <option value="">-- Selecciona un juego --</option>
+          <?php foreach ($juegos_select as $j): ?>
+            <option value="<?= $j['id'] ?>">
+              <?= htmlspecialchars($j['titulo']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+
+        <label>Título del DLC</label>
+        <input type="text" name="titulo" placeholder="Ej: Shadow of the Erdtree" required>
+
+        <label>Precio</label>
+        <input type="number" step="0.01" min="0" name="precio" placeholder="Ej: 299.99" required>
+
+        <label>Fecha de lanzamiento</label>
+        <input type="date" name="fecha_lanzamiento" required>
+
+        <button type="submit">💾 Guardar DLC</button>
+      </form>
+
+      <h2>📋 DLCs Registrados</h2>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Juego</th>
+          <th>Título DLC</th>
+          <th>Precio</th>
+          <th>Fecha lanzamiento</th>
+        </tr>
+        <?php foreach ($dlcs as $d): ?>
+        <tr>
+          <td><?= $d['id'] ?></td>
+          <td><span class="badge"><?= htmlspecialchars($d['nombre_juego']) ?></span></td>
+          <td><?= htmlspecialchars($d['titulo']) ?></td>
+          <td>$<?= number_format($d['precio'], 2) ?></td>
+          <td><?= $d['fecha_lanzamiento'] ?></td>
+        </tr>
+        <?php endforeach; ?>
+      </table>
+    </div>
 
   </div>
 </body>
