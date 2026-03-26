@@ -2,10 +2,20 @@
 require 'conexion.php';
 
 $juegos = $pdo->query("SELECT * FROM juegos ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-$plataformas = $pdo->query("SELECT * FROM plataformas")->fetchAll(PDO::FETCH_ASSOC);
+
+$plataformas = $pdo->query("SELECT * FROM plataformas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+
+$juegos_por_plataforma = $pdo->query("
+    SELECT j.titulo, p.nombre AS plataforma, p.fabricante
+    FROM juegos j
+    INNER JOIN juego_plataforma jp ON j.id = jp.juego_id
+    INNER JOIN plataformas p ON p.id = jp.plataforma_id
+    ORDER BY p.nombre
+")->fetchAll(PDO::FETCH_ASSOC);
+
 $resenas = $pdo->query("
-    SELECT r.*, j.titulo AS nombre_juego 
-    FROM resenas r 
+    SELECT r.*, j.titulo AS nombre_juego
+    FROM resenas r
     JOIN juegos j ON j.id = r.juego_id
     ORDER BY r.id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
@@ -240,25 +250,76 @@ $resenas = $pdo->query("
       </table>
     </div>
 
-    <!-- SECCIÓN: Plataformas -->
-    <div class="section" id="plataformas">
-      <h2>🖥️ Plataformas Disponibles</h2>
-      <table>
+   <!-- SECCIÓN: Plataformas -->
+<div class="section" id="plataformas">
+    <h2>🖥️ Plataformas Disponibles</h2>
+
+    <!-- Formulario agregar plataforma -->
+    <h3>➕ Agregar Plataforma</h3>
+    <form action="agregar_plataforma.php" method="POST">
+        <label>Nombre:</label>
+        <input type="text" name="nombre" required>
+        <label>Fabricante:</label>
+        <input type="text" name="fabricante" required>
+        <button type="submit">Guardar Plataforma</button>
+    </form>
+
+    <hr>
+
+    <!-- Tabla plataformas disponibles -->
+    <table>
         <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Fabricante</th>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Fabricante</th>
         </tr>
         <?php foreach ($plataformas as $p): ?>
-          <tr>
-            <td><?= $p['id'] ?></td>
-            <td><?= htmlspecialchars($p['nombre']) ?></td>
-            <td><?= htmlspecialchars($p['fabricante']) ?></td>
-          </tr>
+            <tr>
+                <td><?= $p['id'] ?></td>
+                <td><?= htmlspecialchars($p['nombre']) ?></td>
+                <td><?= htmlspecialchars($p['fabricante']) ?></td>
+            </tr>
         <?php endforeach; ?>
-      </table>
-    </div>
+    </table>
+    <hr>
+    <!-- Formulario asignar plataforma a juego -->
+    <h3>🔗 Asignar Plataforma a Juego</h3>
+    <form action="asignar_plataforma.php" method="POST">
+        <label>Juego:</label>
+        <select name="juego_id">
+            <?php foreach ($juegos as $j): ?>
+                <option value="<?= $j['id'] ?>"><?= htmlspecialchars($j['titulo']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <label>Plataforma:</label>
+        <select name="plataforma_id">
+            <?php foreach ($plataformas as $p): ?>
+                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre']) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit">Asignar</button>
+    </form>
 
+    <hr>
+
+    <!-- Tabla juegos por plataforma -->
+    <h3>🎮 Juegos por Plataforma</h3>
+    <table>
+        <tr>
+            <th>Juego</th>
+            <th>Plataforma</th>
+            <th>Fabricante</th>
+        </tr>
+        <?php foreach ($juegos_por_plataforma as $jp): ?>
+            <tr>
+                <td><?= htmlspecialchars($jp['titulo']) ?></td>
+                <td><?= htmlspecialchars($jp['plataforma']) ?></td>
+                <td><?= htmlspecialchars($jp['fabricante']) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+
+</div>
     <!-- SECCIÓN: Reseñas -->
 <div class="section" id="resenas">
       <h2>📝 Agregar Reseña</h2>
