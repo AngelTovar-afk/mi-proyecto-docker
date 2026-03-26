@@ -2,20 +2,23 @@
 require 'conexion.php';
 
 $juegos = $pdo->query("SELECT * FROM juegos ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-$plataformas = $pdo->query("SELECT * FROM plataformas")->fetchAll(PDO::FETCH_ASSOC);
-// Consulta de plataformas
-$stmt_plataformas = $pdo->query("SELECT * FROM plataformas ORDER BY nombre");
-$plataformas = $stmt_plataformas->fetchAll(PDO::FETCH_ASSOC);
 
-// Consulta juegos por plataforma
-$stmt_juegos_plataforma = $pdo->query("
-    SELECT j.titulo, p.nombre as plataforma, p.fabricante 
+$plataformas = $pdo->query("SELECT * FROM plataformas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+
+$juegos_por_plataforma = $pdo->query("
+    SELECT j.titulo, p.nombre AS plataforma, p.fabricante
     FROM juegos j
     INNER JOIN juego_plataforma jp ON j.id = jp.juego_id
     INNER JOIN plataformas p ON p.id = jp.plataforma_id
     ORDER BY p.nombre
-");
-$juegos_por_plataforma = $stmt_juegos_plataforma->fetchAll(PDO::FETCH_ASSOC);
+")->fetchAll(PDO::FETCH_ASSOC);
+
+$resenas = $pdo->query("
+    SELECT r.*, j.titulo AS nombre_juego
+    FROM resenas r
+    JOIN juegos j ON j.id = r.juego_id
+    ORDER BY r.id DESC
+")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -191,6 +194,7 @@ $juegos_por_plataforma = $stmt_juegos_plataforma->fetchAll(PDO::FETCH_ASSOC);
       <a href="#juegos">Juegos</a>
       <a href="#plataformas">Plataformas</a>
       <a href="#dlcs">DLCs</a>
+      <a href="#resenas">Reseñas</a>
     </nav>
   </header>
 
@@ -317,7 +321,56 @@ $juegos_por_plataforma = $stmt_juegos_plataforma->fetchAll(PDO::FETCH_ASSOC);
 
 </div>
     <!-- SECCIÓN: Reseñas -->
+<div class="section" id="resenas">
+      <h2>📝 Agregar Reseña</h2>
+      <form action="agregar_resena.php" method="POST">
+        <label>Juego</label>
+        <select name="juego_id" required>
+          <option value="">-- Selecciona un juego para calificar --</option>
+          <?php foreach ($juegos as $j): ?>
+            <option value="<?= $j['id'] ?>">
+              <?= htmlspecialchars($j['titulo']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
 
+        <label>Tu Nombre (Autor)</label>
+        <input type="text" name="autor" placeholder="Ej: Paola Villagrán" required>
+
+        <label>Calificación (1-10)</label>
+        <input type="number" name="calificacion" min="1" max="10" placeholder="Ej: 9" required>
+
+        <label>Comentario</label>
+        <input type="text" name="comentario" placeholder="¿Qué te pareció el juego?" required>
+
+        <label>Fecha</label>
+        <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
+
+        <button type="submit">💾 Publicar Reseña</button>
+      </form>
+
+      <h2>📋 Reseñas de Usuarios</h2>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Juego</th>
+          <th>Autor</th>
+          <th>Calificación</th>
+          <th>Comentario</th>
+          <th>Fecha</th>
+        </tr>
+        <?php foreach ($resenas as $r): ?>
+        <tr>
+          <td><?= $r['id'] ?></td>
+          <td><span class="badge"><?= htmlspecialchars($r['nombre_juego']) ?></span></td>
+          <td><?= htmlspecialchars($r['autor']) ?></td>
+          <td>⭐ <?= $r['calificacion'] ?>/10</td>
+          <td><?= htmlspecialchars($r['comentario']) ?></td>
+          <td><?= $r['fecha'] ?></td>
+        </tr>
+        <?php endforeach; ?>
+      </table>
+    </div>
 
 
     <!-- SECCIÓN: DLCs -->
